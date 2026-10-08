@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT Thought Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            padding-top: 70px;
+            padding-bottom: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .copyright {
+            text-align: center;
+            color: white;
+            font-size: 11px;
+            margin-top: 20px;
+            opacity: 0.95;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            padding: 0 10px;
+        }
+
+        .copyright a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+            transition: border-color 0.3s ease;
+        }
+
+        .copyright a:hover {
+            border-bottom-color: white;
+        }
+
+        .language-selector {
+            position: absolute;
+            top: -55px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            background: rgba(255,255,255,0.2);
+            padding: 6px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .language-selector.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .language-btn {
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 5px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .language-btn:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: white;
+        }
+
+        .language-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding-top: 60px;
+            }
+            
+            .container {
+                border-radius: 16px;
+            }
+            
+            .header {
+                padding: 20px 20px 15px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .language-selector {
+                top: -50px;
+                padding: 5px 8px;
+            }
+            
+            .language-btn {
+                padding: 4px 12px;
+                font-size: 11px;
+            }
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #e0e7ff;
+            position: relative;
+            width: 100%;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .header {
+            padding: 30px 30px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .hint {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1e40af;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .checkbox-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .checkbox-item.selected {
+            background: #eff6ff;
+            border-color: #667eea;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .checkbox-item label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 15px;
+            color: #334155;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .skip-btn {
+            background: transparent;
+            color: #64748b;
+            text-decoration: underline;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .summary {
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            color: #334155;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="language-selector" id="languageSelector">
+            <button class="language-btn active" onclick="changeLanguage('en')" id="btn-en">EN</button>
+            <button class="language-btn" onclick="changeLanguage('ro')" id="btn-ro">RO</button>
+        </div>
+
+        <div class="container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="header">
+            <h1 id="columnName">A. Activating Event</h1>
+            <p id="stepIndicator">Question 1 of 3</p>
+        </div>
+
+        <div class="content">
+            <!-- Step 1.1: Event - Question 1 -->
+            <div class="step active" data-step="1-1">
+                <div class="question">What happened?</div>
+                <div class="hint">💡 Describe the activating event objectively. Focus on the facts of what happened.</div>
+                <textarea id="event1" placeholder="Example: I was at work and my boss criticized my presentation..."></textarea>
+                <div class="buttons">
+                    <button class="btn-primary" onclick="nextQuestion()">Next Question</button>
+                </div>
+                <button class="skip-btn" onclick="nextStage()">Skip to Next Stage</button>
+            </div>
+
+            <!-- Step 1.2: Event - Question 2 -->
+            <div class="step" data-step="1-2">
+                <div class="question">Who was involved?</div>
+                <div class="hint">💡 List the people who were part of this situation.</div>
+                <textarea id="event2" placeholder="Example: My boss, my colleagues..."></textarea>
+                <div class="buttons">
+                    <button class="btn-secondary" onclick="prevQuestion()">Back</button>
+                    <button class="btn-primary" onclick="nextQuestion()">Next Question</button>
+                </div>
+                <button class="skip-btn" onclick="nextStage()">Skip to Next Stage</button>
+            </div>
+
+            <!-- Step 1.3: Event - Question 3 -->
+            <div class="step" data-step="1-3">
+                <div class="question">Where were you?</div>
+                <div class="hint">💡 Describe the location or setting.</div>
+                <textarea id="event3" placeholder="Example: In the conference room at work..."></textarea>
+                <div class="buttons">
+                    <button class="btn-secondary" onclick="prevQuestion()">Back</button>
+                    <button class="btn-primary" onclick="nextStage()">Continue to Next Stage</button>
+                </div>
+            </div>
+
+            <!-- Step 2.1: Belief - Question 1 -->
+            <div class="step" data-step="2-1">
+                <div class="question">What was your automatic thought or interpretation of the situation?</div>
+                <div class="hint">💡 Identify the thoughts that immediately came to mind during the situation.</div>
+                <textarea id="belief1" placeholder="Example: I thought 'I'm going to fail' or 'They think I'm incompetent'..."></textarea>
+                <div class="buttons">
+                    <button class="btn-secondary" onclick="prevStage()">Back to Previous Stage</button>
+                    <button class="btn-primary" onclick="nextQuestion()">Next Question</button>
+                </div>
+                <button class="skip-btn" onclick="nextStage()">Skip to Next Stage</button>
+            </div>
+
+            <!-- Step 2.2: Belief - Question 2 -->
+            <div class="step" data-step="2-2">
+                <div class="question">What assumptions were you making?</div>
+                <div class="hint">💡 What beliefs or assumptions underlie your automatic thoughts?</div>
+                <textarea id="belief2" placeholder="Example: I assumed that one mistake means total failure..."></textarea>
+                <div class="buttons">
+                    <button class="btn-secondary" onclick="prevQuestion()">Back</button>
+                    <button class="btn-primary" onclick="nextQuestion()">Next Question</button>
+                </div>
+                <button class="skip-btn" onclick="nextStage()">Skip to Next Stage</button>
+            </div>
+
+            <!-- Step 2.3: Belief - Question 3 -->
+            <div class="step" data-step="2-3">
+                <div class="question">What does this mean about you, others, or the world?</div>
+                <div class="hint">💡 What deeper meanings or beliefs does this situation reveal?</div>
+                <textarea id="belief3" placeholder="Example: This means I'm not good enough, people will judge me..."></textarea>
+                <div class="buttons">
+                    <button class="btn-secondary" onclick="prevQuestion()">Back</button>
+                    <button class="btn-primary" onclick="nextStage()">Continue to Next Stage</button>
+                </div>
+            </div>
+
+            <!-- Step 3.1: Consequence - Question 1 -->
+            <div class="step" data-step="3-1">
+                <div class="question">How did you feel emotionally (e.g., sad, angry, anxious)?</div>
+                <div class="hint">💡 Name the emotions you experienced. It's okay to have multiple feelings.</div>
+                <textarea id="consequence1" placeholder="Example: I felt embarrassed, anxious, and angry..."></textarea>
+                <div class="buttons">
+                    <button class="btn-secondary" onclick="prevStage()">Back to Previous Stage</button>
+                    <button class="btn-primary" onclick="nextQuestion()">Next Question</button>
+                </div>
+                <button class="skip-btn" onclick="nextStage()">Skip to Next Stage</button>
+            </div>
+
+            <!-- Step 3.2: Consequence - Question 2 -->
+            <div class="step" data-step="3-2">
+                <div class="question">What did you do or want to do (e.g., withdraw, confront them)?</div>
+                <div class="hint">💡 Describe your behavioral response or urges. What actions did you take or feel compelled to take?</div>
+                <textarea id="consequence2" placeholder="Example: I wanted to leave the meeting and avoid my boss..."></textarea>
+                <div class="buttons">
+                    <button class="btn-secondary" onclick="prevQuestion()">Back</button>
+                    <button class="btn-primary" onclick="nextStage()">Continue to Next Stage</button>
+                </div>
+            </div>
+
+            <!-- Step 4.1: Dispute - Question 1 -->
+            <div class="step" data-step="4-1">
+                <div class="question">Challenge the negative belief.</div>
+                <div class="hint">💡 What evidence contradicts it? Is there another way to look at the situation? Are your assumptions realistic?</div>
+                <textarea id="dispute1" placeholder="Example: There's no evidence that one criticism means I'm incompetent. I've received positive feedback before..."></textarea>
+                <div class="buttons">
+                    <button class="btn-secondary" onclick="prevStage()">Back to Previous Stage</button>
+                    <button class="btn-primary" onclick="nextStage()">Continue to Next Stage</button>
+                </div>
+            </div>
+
+            <!-- Step 5.1: Effective New Belief -->
+            <div class="step" data-step="5-1">
+                <div class="question">Develop a more balanced and realistic thought.</div>
+                <div class="hint">💡 How can you think about the situation differently that is more helpful?</div>
+                <textarea id="effective1" placeholder="Example: My boss's feedback was about one presentation, not my overall abilities. I can learn from this and improve..."></textarea>
+                <div class="buttons">
+                    <button class="btn-secondary" onclick="prevStage()">Back to Previous Stage</button>
+                    <button class="btn-primary" onclick="nextStage()">Continue to Next Stage</button>
+                </div>
+            </div>
+
+            <!-- Step 6.1: Cognitive Distortions -->
+            <div class="step" data-step="6-1">
+                <div class="question">Which cognitive distortions apply?</div>
+                <div class="hint">💡 Select all patterns of thinking that match your experience. It's common to have multiple.</div>
+                <div class="checkbox-group" id="distortions">
+                    <div class="checkbox-item" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" value="All-or-Nothing" id="d1">
+                        <label for="d1">All-or-Nothing Thinking</label>
+                    </div>
+                    <div class="checkbox-item" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" value="Overgeneralization" id="d2">
+                        <label for="d2">Overgeneralization</label>
+                    </div>
+                    <div class="checkbox-item" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" value="Mental Filter" id="d3">
+                        <label for="d3">Mental Filter</label>
+                    </div>
+                    <div class="checkbox-item" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" value="Disqualifying the Positive" id="d4">
+                        <label for="d4">Disqualifying the Positive</label>
+                    </div>
+                    <div class="checkbox-item" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" value="Jumping to Conclusions" id="d5">
+                        <label for="d5">Jumping to Conclusions</label>
+                    </div>
+                    <div class="checkbox-item" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" value="Catastrophizing" id="d6">
+                        <label for="d6">Catastrophizing</label>
+                    </div>
+                    <div class="checkbox-item" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" value="Emotional Reasoning" id="d7">
+                        <label for="d7">Emotional Reasoning</label>
+                    </div>
+                    <div class="checkbox-item" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" value="Labeling" id="d8">
+                        <label for="d8">Labeling</label>
+                    </div>
+                    <div class="checkbox-item" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" value="Personalization" id="d9">
+                        <label for="d9">Personalization</label>
+                    </div>
+                </div>
+                <button class="skip-btn" onclick="nextStage()">Skip this stage</button>
+                <div class="buttons">
+                    <button class="btn-secondary" onclick="prevStage()">Back to Previous Stage</button>
+                    <button class="btn-primary" onclick="showSummary()">Finish</button>
+                </div>
+            </div>
+
+            <!-- Step 7: Summary -->
+            <div class="step" data-step="7">
+                <div class="question" id="summaryTitle">Your Thought Analysis Summary</div>
+                <div class="summary" id="summaryContent"></div>
+                <div class="buttons">
+                    <button class="btn-primary" onclick="restart()">Start New Analysis</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="copyright">
+        © 2025 <a href="https://www.psyalexsimion.com" target="_blank">Alex Simion</a>
+    </div>
+    </div>
+
+    <script>
+        let currentLanguage = 'en';
+        
+        const translations = {
+            en: {
+                stages: [
+                    { name: 'A. Activating Event', questions: 3 },
+                    { name: 'B. Belief', questions: 3 },
+                    { name: 'C. Consequence', questions: 2 },
+                    { name: 'D. Dispute', questions: 1 },
+                    { name: 'E. Effective New Belief', questions: 1 },
+                    { name: 'F. Cognitive Distortions', questions: 1 }
+                ],
+                stepIndicator: 'Question',
+                of: 'of',
+                complete: 'Complete!',
+                summary: 'Your Thought Analysis Summary',
+                buttons: {
+                    next: 'Next Question',
+                    continue: 'Continue to Next Stage',
+                    back: 'Back',
+                    backStage: 'Back to Previous Stage',
+                    skip: 'Skip to Next Stage',
+                    skipStage: 'Skip this stage',
+                    finish: 'Finish',
+                    restart: 'Start New Analysis'
+                },
+                questions: {
+                    '1-1': { q: 'What happened?', hint: '💡 Describe the activating event objectively. Focus on the facts of what happened.', placeholder: 'Example: I was at work and my boss criticized my presentation...' },
+                    '1-2': { q: 'Who was involved?', hint: '💡 List the people who were part of this situation.', placeholder: 'Example: My boss, my colleagues...' },
+                    '1-3': { q: 'Where were you?', hint: '💡 Describe the location or setting.', placeholder: 'Example: In the conference room at work...' },
+                    '2-1': { q: 'What was your automatic thought or interpretation of the situation?', hint: '💡 Identify the thoughts that immediately came to mind during the situation.', placeholder: "Example: I thought 'I'm going to fail' or 'They think I'm incompetent'..." },
+                    '2-2': { q: 'What assumptions were you making?', hint: '💡 What beliefs or assumptions underlie your automatic thoughts?', placeholder: 'Example: I assumed that one mistake means total failure...' },
+                    '2-3': { q: 'What does this mean about you, others, or the world?', hint: '💡 What deeper meanings or beliefs does this situation reveal?', placeholder: "Example: This means I'm not good enough, people will judge me..." },
+                    '3-1': { q: 'How did you feel emotionally (e.g., sad, angry, anxious)?', hint: '💡 Name the emotions you experienced. It\'s okay to have multiple feelings.', placeholder: 'Example: I felt embarrassed, anxious, and angry...' },
+                    '3-2': { q: 'What did you do or want to do (e.g., withdraw, confront them)?', hint: '💡 Describe your behavioral response or urges. What actions did you take or feel compelled to take?', placeholder: 'Example: I wanted to leave the meeting and avoid my boss...' },
+                    '4-1': { q: 'Challenge the negative belief.', hint: '💡 What evidence contradicts it? Is there another way to look at the situation? Are your assumptions realistic?', placeholder: "Example: There's no evidence that one criticism means I'm incompetent. I've received positive feedback before..." },
+                    '5-1': { q: 'Develop a more balanced and realistic thought.', hint: '💡 How can you think about the situation differently that is more helpful?', placeholder: "Example: My boss's feedback was about one presentation, not my overall abilities. I can learn from this and improve..." },
+                    '6-1': { q: 'Which cognitive distortions apply?', hint: '💡 Select all patterns of thinking that match your experience. It\'s common to have multiple.' }
+                },
+                distortions: [
+                    'All-or-Nothing Thinking',
+                    'Overgeneralization',
+                    'Mental Filter',
+                    'Disqualifying the Positive',
+                    'Jumping to Conclusions',
+                    'Catastrophizing',
+                    'Emotional Reasoning',
+                    'Labeling',
+                    'Personalization'
+                ],
+                noneSelected: 'None selected',
+                notProvided: 'Not provided'
+            },
+            ro: {
+                stages: [
+                    { name: 'A. Eveniment Activator', questions: 3 },
+                    { name: 'B. Credință', questions: 3 },
+                    { name: 'C. Consecință', questions: 2 },
+                    { name: 'D. Dispută', questions: 1 },
+                    { name: 'E. Credință Nouă', questions: 1 },
+                    { name: 'F. Distorsiuni Cognitive', questions: 1 }
+                ],
+                stepIndicator: 'Întrebarea',
+                of: 'din',
+                complete: 'Complet!',
+                summary: 'Rezumatul Analizei Gândirii',
+                buttons: {
+                    next: 'Următoarea Întrebare',
+                    continue: 'Continuă la Următoarea Etapă',
+                    back: 'Înapoi',
+                    backStage: 'Înapoi la Etapa Anterioară',
+                    skip: 'Sari la Următoarea Etapă',
+                    skipStage: 'Sari peste această etapă',
+                    finish: 'Finalizează',
+                    restart: 'Începe o Analiză Nouă'
+                },
+                questions: {
+                    '1-1': { q: 'Ce s-a întâmplat?', hint: '💡 Descrie evenimentul activator în mod obiectiv. Concentrează-te pe faptele care s-au întâmplat.', placeholder: 'Exemplu: Eram la serviciu și șeful meu mi-a criticat prezentarea...' },
+                    '1-2': { q: 'Cine a fost implicat?', hint: '💡 Enumeră persoanele care au făcut parte din această situație.', placeholder: 'Exemplu: Șeful meu, colegii mei...' },
+                    '1-3': { q: 'Unde erai?', hint: '💡 Descrie locația sau contextul.', placeholder: 'Exemplu: În sala de conferințe la serviciu...' },
+                    '2-1': { q: 'Care a fost gândul tău automat sau interpretarea situației?', hint: '💡 Identifică gândurile care ți-au venit imediat în minte în timpul situației.', placeholder: 'Exemplu: Am gândit "O să eșuez" sau "Cred că sunt incompetent"...' },
+                    '2-2': { q: 'Ce presupuneri făceai?', hint: '💡 Ce credințe sau presupuneri stau la baza gândurilor tale automate?', placeholder: 'Exemplu: Am presupus că o greșeală înseamnă eșec total...' },
+                    '2-3': { q: 'Ce înseamnă asta despre tine, alții sau lume?', hint: '💡 Ce semnificații sau credințe mai profunde dezvăluie această situație?', placeholder: 'Exemplu: Asta înseamnă că nu sunt suficient de bun, oamenii mă vor judeca...' },
+                    '3-1': { q: 'Cum te-ai simțit emoțional (de ex., trist, nervos, anxios)?', hint: '💡 Numește emoțiile pe care le-ai experimentat. Este normal să ai mai multe sentimente.', placeholder: 'Exemplu: M-am simțit jenat, anxios și furios...' },
+                    '3-2': { q: 'Ce ai făcut sau ai vrut să faci (de ex., să te retragi, să îiconfrunți)?', hint: '💡 Descrie răspunsul tău comportamental sau impulsurile. Ce acțiuni ai întreprins sau ai simțit nevoia să le faci?', placeholder: 'Exemplu: Am vrut să plec din întâlnire și să evit șeful...' },
+                    '4-1': { q: 'Contestă credința negativă.', hint: '💡 Ce dovezi o contrazic? Există o altă modalitate de a privi situația? Presupunerile tale sunt realiste?', placeholder: 'Exemplu: Nu există dovezi că o critică înseamnă că sunt incompetent. Am primit feedback pozitiv înainte...' },
+                    '5-1': { q: 'Dezvoltă un gând mai echilibrat și realist.', hint: '💡 Cum poți să te gândești la situație diferit, într-un mod mai util?', placeholder: 'Exemplu: Feedback-ul șefului meu a fost despre o singură prezentare, nu despre abilitățile mele generale. Pot învăța din asta și să mă îmbunătățesc...' },
+                    '6-1': { q: 'Care distorsiuni cognitive se aplică?', hint: '💡 Selectează toate tiparele de gândire care se potrivesc cu experiența ta. Este obișnuit să ai mai multe.' }
+                },
+                distortions: [
+                    'Gândire Tot-sau-Nimic',
+                    'Suprageneralizare',
+                    'Filtru Mental',
+                    'Descalificarea Pozitivului',
+                    'Sărituri la Concluzii',
+                    'Catastrofizare',
+                    'Raționament Emoțional',
+                    'Etichetare',
+                    'Personalizare'
+                ],
+                noneSelected: 'Niciunul selectat',
+                notProvided: 'Nu a fost furnizat'
+            }
+        };
+
+        const stages = [
+            {
+                name: 'A. Activating Event',
+                questions: ['1-1', '1-2', '1-3'],
+                totalQuestions: 3
+            },
+            {
+                name: 'B. Belief',
+                questions: ['2-1', '2-2', '2-3'],
+                totalQuestions: 3
+            },
+            {
+                name: 'C. Consequence',
+                questions: ['3-1', '3-2'],
+                totalQuestions: 2
+            },
+            {
+                name: 'D. Dispute',
+                questions: ['4-1'],
+                totalQuestions: 1
+            },
+            {
+                name: 'E. Effective New Belief',
+                questions: ['5-1'],
+                totalQuestions: 1
+            },
+            {
+                name: 'F. Cognitive Distortions',
+                questions: ['6-1'],
+                totalQuestions: 1
+            }
+        ];
+
+        let currentStageIndex = 0;
+        let currentQuestionIndex = 0;
+        const data = {};
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Update button states
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+            document.getElementById('btn-ro').classList.toggle('active', lang === 'ro');
+            
+            // Update all content
+            updateAllContent();
+        }
+
+        function updateAllContent() {
+            const t = translations[currentLanguage];
+            const currentStep = getCurrentStep();
+            
+            // Update header
+            document.getElementById('columnName').textContent = t.stages[currentStageIndex].name;
+            updateHeader();
+            
+            // Update current question content
+            const questionData = t.questions[currentStep];
+            if (questionData) {
+                const stepEl = document.querySelector(`.step[data-step="${currentStep}"]`);
+                if (stepEl) {
+                    const questionEl = stepEl.querySelector('.question');
+                    const hintEl = stepEl.querySelector('.hint');
+                    const textarea = stepEl.querySelector('textarea');
+                    
+                    if (questionEl) questionEl.textContent = questionData.q;
+                    if (hintEl) hintEl.innerHTML = questionData.hint;
+                    if (textarea && questionData.placeholder) textarea.placeholder = questionData.placeholder;
+                }
+            }
+            
+            // Update cognitive distortions if on that step
+            if (currentStep === '6-1') {
+                updateDistortions();
+            }
+            
+            // Update all buttons
+            updateButtons();
+        }
+
+        function updateDistortions() {
+            const t = translations[currentLanguage];
+            const distortionItems = document.querySelectorAll('#distortions .checkbox-item');
+            distortionItems.forEach((item, idx) => {
+                const label = item.querySelector('label');
+                if (label && t.distortions[idx]) {
+                    label.textContent = t.distortions[idx];
+                }
+            });
+        }
+
+        function updateButtons() {
+            const t = translations[currentLanguage];
+            const currentStep = getCurrentStep();
+            
+            // Update all button texts based on current step
+            document.querySelectorAll('.btn-primary, .btn-secondary, .skip-btn').forEach(btn => {
+                const onclick = btn.getAttribute('onclick');
+                if (onclick === 'nextQuestion()') btn.textContent = t.buttons.next;
+                else if (onclick === 'nextStage()' && btn.classList.contains('skip-btn')) {
+                    btn.textContent = currentStageIndex < stages.length - 1 ? t.buttons.skip : t.buttons.skipStage;
+                }
+                else if (onclick === 'nextStage()' && btn.classList.contains('btn-primary')) btn.textContent = t.buttons.continue;
+                else if (onclick === 'prevQuestion()') btn.textContent = t.buttons.back;
+                else if (onclick === 'prevStage()') btn.textContent = t.buttons.backStage;
+                else if (onclick === 'showSummary()') btn.textContent = t.buttons.finish;
+                else if (onclick === 'restart()') btn.textContent = t.buttons.restart;
+            });
+        }
+
+        function getCurrentStep() {
+            return stages[currentStageIndex].questions[currentQuestionIndex];
+        }
+
+        function updateHeader() {
+            const t = translations[currentLanguage];
+            const currentStage = stages[currentStageIndex];
+            document.getElementById('columnName').textContent = t.stages[currentStageIndex].name;
+            document.getElementById('stepIndicator').textContent = 
+                `${t.stepIndicator} ${currentQuestionIndex + 1} ${t.of} ${currentStage.totalQuestions}`;
+            
+            // Calculate overall progress
+            let totalQuestions = 0;
+            let completedQuestions = 0;
+            
+            stages.forEach((stage, idx) => {
+                totalQuestions += stage.totalQuestions;
+                if (idx < currentStageIndex) {
+                    completedQuestions += stage.totalQuestions;
+                } else if (idx === currentStageIndex) {
+                    completedQuestions += currentQuestionIndex;
+                }
+            });
+            
+            const progress = (completedQuestions / totalQuestions) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function nextQuestion() {
+            saveCurrentData();
+            
+            // Hide language selector after first question
+            if (currentStageIndex === 0 && currentQuestionIndex === 0) {
+                document.getElementById('languageSelector').classList.add('hidden');
+            }
+            
+            const currentStage = stages[currentStageIndex];
+            
+            if (currentQuestionIndex < currentStage.questions.length - 1) {
+                // Move to next question in same stage
+                document.querySelector('.step.active').classList.remove('active');
+                currentQuestionIndex++;
+                document.querySelector(`.step[data-step="${getCurrentStep()}"]`).classList.add('active');
+                updateHeader();
+                updateAllContent();
+            } else {
+                // This is the last question, shouldn't happen
+                nextStage();
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                document.querySelector('.step.active').classList.remove('active');
+                currentQuestionIndex--;
+                document.querySelector(`.step[data-step="${getCurrentStep()}"]`).classList.add('active');
+                updateHeader();
+                updateAllContent();
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function nextStage() {
+            saveCurrentData();
+            
+            // Hide language selector after moving past first question
+            if (currentStageIndex === 0 && currentQuestionIndex === 0) {
+                document.getElementById('languageSelector').classList.add('hidden');
+            }
+            
+            if (currentStageIndex < stages.length - 1) {
+                document.querySelector('.step.active').classList.remove('active');
+                currentStageIndex++;
+                currentQuestionIndex = 0;
+                document.querySelector(`.step[data-step="${getCurrentStep()}"]`).classList.add('active');
+                updateHeader();
+                updateAllContent();
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function prevStage() {
+            if (currentStageIndex > 0) {
+                document.querySelector('.step.active').classList.remove('active');
+                currentStageIndex--;
+                currentQuestionIndex = stages[currentStageIndex].questions.length - 1;
+                document.querySelector(`.step[data-step="${getCurrentStep()}"]`).classList.add('active');
+                updateHeader();
+                updateAllContent();
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function saveCurrentData() {
+            const step = getCurrentStep();
+            
+            if (step === '1-1') data.event1 = document.getElementById('event1').value;
+            else if (step === '1-2') data.event2 = document.getElementById('event2').value;
+            else if (step === '1-3') data.event3 = document.getElementById('event3').value;
+            else if (step === '2-1') data.belief1 = document.getElementById('belief1').value;
+            else if (step === '2-2') data.belief2 = document.getElementById('belief2').value;
+            else if (step === '2-3') data.belief3 = document.getElementById('belief3').value;
+            else if (step === '3-1') data.consequence1 = document.getElementById('consequence1').value;
+            else if (step === '3-2') data.consequence2 = document.getElementById('consequence2').value;
+            else if (step === '4-1') data.dispute1 = document.getElementById('dispute1').value;
+            else if (step === '5-1') data.effective1 = document.getElementById('effective1').value;
+            else if (step === '6-1') {
+                const selected = [];
+                const selectedIndices = [];
+                document.querySelectorAll('#distortions input[type="checkbox"]:checked').forEach(cb => {
+                    const index = parseInt(cb.id.replace('d', '')) - 1;
+                    selected.push(cb.value);
+                    selectedIndices.push(index);
+                });
+                data.distortions = selected.join(', ') || null;
+                data.distortionIndices = selectedIndices;
+            }
+        }
+
+        function toggleCheckbox(element) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            element.classList.toggle('selected', checkbox.checked);
+        }
+
+        function showSummary() {
+            saveCurrentData();
+            
+            const t = translations[currentLanguage];
+            const eventText = [data.event1, data.event2, data.event3].filter(Boolean).join(' ');
+            const beliefText = [data.belief1, data.belief2, data.belief3].filter(Boolean).join(' ');
+            const consequenceText = [data.consequence1, data.consequence2].filter(Boolean).join(' ');
+            
+            // Translate distortions to current language
+            let distortionsText = t.noneSelected;
+            if (data.distortionIndices && data.distortionIndices.length > 0) {
+                const translatedDistortions = data.distortionIndices.map(idx => t.distortions[idx]);
+                distortionsText = translatedDistortions.join(', ');
+            }
+            
+            const summaryHTML = `
+                <div class="summary-item">
+                    <div class="summary-label">🎯 ${t.stages[0].name.toUpperCase()}</div>
+                    <div class="summary-value">${eventText || t.notProvided}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">💭 ${t.stages[1].name.toUpperCase()}</div>
+                    <div class="summary-value">${beliefText || t.notProvided}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">⚡ ${t.stages[2].name.toUpperCase()}</div>
+                    <div class="summary-value">${consequenceText || t.notProvided}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">🔍 ${t.stages[3].name.toUpperCase()}</div>
+                    <div class="summary-value">${data.dispute1 || t.notProvided}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">✨ ${t.stages[4].name.toUpperCase()}</div>
+                    <div class="summary-value">${data.effective1 || t.notProvided}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">🧠 ${t.stages[5].name.toUpperCase()}</div>
+                    <div class="summary-value">${distortionsText}</div>
+                </div>
+            `;
+            
+            document.getElementById('summaryContent').innerHTML = summaryHTML;
+            document.querySelector('.step.active').classList.remove('active');
+            document.querySelector('.step[data-step="7"]').classList.add('active');
+            document.getElementById('progressFill').style.width = '100%';
+            document.getElementById('columnName').textContent = t.summary;
+            document.getElementById('summaryTitle').textContent = t.summary;
+            document.getElementById('stepIndicator').textContent = t.complete;
+            updateButtons();
+            window.scrollTo(0, 0);
+        }
+
+        function restart() {
+            currentStageIndex = 0;
+            currentQuestionIndex = 0;
+            document.querySelector('.step.active').classList.remove('active');
+            document.querySelector('.step[data-step="1-1"]').classList.add('active');
+            
+            // Clear all inputs
+            document.getElementById('event1').value = '';
+            document.getElementById('event2').value = '';
+            document.getElementById('event3').value = '';
+            document.getElementById('belief1').value = '';
+            document.getElementById('belief2').value = '';
+            document.getElementById('belief3').value = '';
+            document.getElementById('consequence1').value = '';
+            document.getElementById('consequence2').value = '';
+            document.getElementById('dispute1').value = '';
+            document.getElementById('effective1').value = '';
+            document.querySelectorAll('#distortions input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+                cb.closest('.checkbox-item').classList.remove('selected');
+            });
+            
+            updateHeader();
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+</html>
